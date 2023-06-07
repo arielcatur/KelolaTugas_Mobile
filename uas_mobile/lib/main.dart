@@ -13,15 +13,18 @@ class TaskManagerApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       home: HomePage(),
-      routes: {
-        '/addTask': (context) => AddTaskPage(),
-        '/taskDetail': (context) => TaskDetailPage(),
-      },
     );
   }
 }
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  List<Task> taskList = [];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -36,7 +39,17 @@ class HomePage extends StatelessWidget {
             title: Text(task.title),
             subtitle: Text(task.description),
             onTap: () {
-              Navigator.pushNamed(context, '/taskDetail', arguments: task);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => TaskDetailPage(
+                    task: task,
+                    onDelete: () {
+                      _deleteTask(task);
+                    },
+                  ),
+                ),
+              );
             },
           );
         },
@@ -44,14 +57,38 @@ class HomePage extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
         onPressed: () {
-          Navigator.pushNamed(context, '/addTask');
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AddTaskPage(
+                onTaskAdded: (newTask) {
+                  setState(() {
+                    taskList.add(newTask);
+                  });
+                },
+              ),
+            ),
+          );
         },
       ),
+    );
+  }
+
+  void _deleteTask(Task task) {
+    setState(() {
+      taskList.remove(task);
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Task deleted')),
     );
   }
 }
 
 class AddTaskPage extends StatelessWidget {
+  final Function(Task) onTaskAdded;
+
+  AddTaskPage({required this.onTaskAdded});
+
   @override
   Widget build(BuildContext context) {
     String title = '';
@@ -87,7 +124,7 @@ class AddTaskPage extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 final newTask = Task(title: title, description: description);
-                taskList.add(newTask);
+                onTaskAdded(newTask);
                 Navigator.pop(context);
               },
               child: Text('Save'),
@@ -100,11 +137,13 @@ class AddTaskPage extends StatelessWidget {
 }
 
 class TaskDetailPage extends StatelessWidget {
+  final Task task;
+  final Function onDelete;
+
+  TaskDetailPage({required this.task, required this.onDelete});
+
   @override
   Widget build(BuildContext context) {
-    final Task task = ModalRoute.of(context)?.settings.arguments as Task ??
-        Task(title: '', description: '');
-
     return Scaffold(
       appBar: AppBar(
         title: Text('Task Detail'),
@@ -115,14 +154,51 @@ class TaskDetailPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Title: ${task.title}',
+              '${task.title}',
               style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 8.0),
-            Text('Description: ${task.description}'),
+            Text('${task.description}'),
+            SizedBox(height: 16.0),
+            ElevatedButton(
+              onPressed: () {
+                _showDeleteConfirmationDialog(context);
+              },
+              child: Text('Delete'),
+            ),
           ],
         ),
       ),
+    );
+  }
+
+  void _showDeleteConfirmationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Delete Task'),
+          content: Text('Are you sure you want to delete this task?'),
+          actions: [
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('Delete'),
+              onPressed: () {
+                onDelete();
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Task deleted')),
+                );
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -133,18 +209,3 @@ class Task {
 
   Task({required this.title, required this.description});
 }
-
-List<Task> taskList = [
-  Task(
-    title: 'Task 1',
-    description: 'This is the first task',
-  ),
-  Task(
-    title: 'Task 2',
-    description: 'This is the second task',
-  ),
-  Task(
-    title: 'Task 3',
-    description: 'This is the third task',
-  ),
-];
