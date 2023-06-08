@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -192,11 +193,31 @@ class AddTaskPage extends StatelessWidget {
   }
 }
 
-class TaskDetailPage extends StatelessWidget {
+class TaskDetailPage extends StatefulWidget {
   final Task task;
   final Function onDelete;
 
   TaskDetailPage({required this.task, required this.onDelete});
+
+  @override
+  _TaskDetailPageState createState() => _TaskDetailPageState();
+}
+
+class _TaskDetailPageState extends State<TaskDetailPage> {
+  int index = Random().nextInt(10);
+
+  List<String> quotes = [
+    "Aku rindu menyelesaikan pekerjaan besar dan mulia, tapi tugas utamaku adalah untuk menyelesaikan pekerjaan kecil seakan itu pekerjaan besar dan mulia.",
+    "Tugas besar kita bukanlah melihat sesuatu yang berkilau dari kejauhan tetapi melakukan sesuatu terhadap apa yang ada di tangan.",
+    "Tugas atau posisi yang diemban bukan untuk dibanggakan, tapi untuk dipertanggung jawabkan.",
+    "Jangan patah semangat, karena Tuhan akan selalu memberi waktu dan kesempatan. Tugas kita adalah berusaha semampu yang kita bisa.",
+    "Jangan sampai terlalu sibuk dengan deadline tugas, hingga lupa bahwa deadline hidup kita bisa berakhir sekarang juga, detik ini juga.",
+    "Tidak ada yang benar-benar sulit jika Anda membaginya menjadi tugas-tugas kecil.",
+    "Lakukan sesuatu yang tidak anda sukai setiap hari, inilah peraturan dasar untuk mendapatkan kebiasaan melakukan tugas anda tanpa rasa sakit.",
+    "Tugas di hadapanmu tidak pernah lebih besar ketimbang kekuatan di belakangmu.",
+    "Tidak ada yang begitu melelahkan selain bergantung pada tugas yang belum selesai.",
+    "Jika suatu tugas telah dimulai, jangan pernah meninggalkannya sampai selesai.",
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -210,17 +231,54 @@ class TaskDetailPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${task.title}',
-              style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+              '${widget.task.title}',
+              style: TextStyle(
+                  fontSize: 18.0,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue),
             ),
             SizedBox(height: 8.0),
-            Text('${task.description}'),
+            Text('${widget.task.description}',
+                style: TextStyle(color: Colors.lightBlue)),
             SizedBox(height: 16.0),
             ElevatedButton(
               onPressed: () {
                 _showDeleteConfirmationDialog(context);
               },
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all<Color>(Colors.red),
+              ),
               child: Text('Delete'),
+            ),
+            SizedBox(height: 16.0),
+            Divider(
+              color: Colors.black,
+              height: 20.0,
+              thickness: 1.0,
+              indent: 1.0,
+              endIndent: 1.0,
+            ),
+            Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Motivasi Harian:',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue),
+                    ),
+                    Text(
+                      '"${quotes[index % quotes.length]}"',
+                      style: TextStyle(fontSize: 16, color: Colors.lightBlue),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
@@ -245,7 +303,7 @@ class TaskDetailPage extends StatelessWidget {
             TextButton(
               child: Text('Delete'),
               onPressed: () {
-                onDelete();
+                widget.onDelete();
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Task deleted')),
